@@ -1,6 +1,10 @@
 <template>
   <UApp>
-    <NuxtPage />
+    <UContainer>
+      <Sidebar />
+
+      <NuxtPage />
+    </UContainer>
   </UApp>
 </template>
 

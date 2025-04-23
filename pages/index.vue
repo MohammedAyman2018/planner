@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts" setup>
-import TimeLine from "@/components/TimeLine.vue";
+import TimeLine from "@/components/timeline.vue";
 </script>
 
 <style></style>
