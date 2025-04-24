@@ -6,7 +6,7 @@
     </div>
 
     <!-- Categories Table -->
-    <UTable :columns="columns" :data="categories" :loading="loading">
+    <UTable :columns="columns" :data="categories!" :loading="loading">
       <template #icon-cell="{ row }">
         <div class="flex items-center gap-2">
           <UIcon :name="row.original.icon" class="text-lg" />
@@ -73,7 +73,9 @@
           >
             Cancel
           </UButton>
-          <UButton color="error" @click="deleteCategory">Delete</UButton>
+          <UButton color="error" @click="deleteCategory(currentCategory!._id!)"
+            >Delete</UButton
+          >
         </div>
       </template>
     </UModal>
@@ -81,6 +83,12 @@
 </template>
 
 <script lang="ts" setup>
+import type { ICategory } from "~/interfaces/categories";
+
+const { data: categories, refresh } = await useFetch<ICategory[]>(
+  "/api/categories"
+);
+
 // Table columns definition
 const columns = ref([
   {
@@ -100,59 +108,11 @@ const columns = ref([
   },
 ]);
 
-// Sample categories data
-const categories = ref([
-  {
-    id: "health",
-    name: "Health",
-    icon: "i-lucide-heart",
-  },
-  {
-    id: "work",
-    name: "Work",
-    icon: "i-lucide-briefcase",
-  },
-  {
-    id: "education",
-    name: "Education",
-    icon: "i-lucide-book",
-  },
-  {
-    id: "family",
-    name: "Family",
-    icon: "i-lucide-users",
-  },
-  {
-    id: "entertainment",
-    name: "Entertainment",
-    icon: "i-lucide-gamepad-2",
-  },
-  {
-    id: "sports",
-    name: "Sports",
-    icon: "i-lucide-dumbbell",
-  },
-  {
-    id: "social",
-    name: "Social",
-    icon: "i-lucide-users",
-  },
-  {
-    id: "other",
-    name: "Other",
-    icon: "i-lucide-more-horizontal",
-  },
-]);
-
 const loading = ref(false);
 const isModalOpen = ref(false);
 const isDeleteDialogOpen = ref(false);
 const isEditing = ref(false);
-const currentCategory: Ref<{
-  name: string;
-  icon: string;
-  id: string;
-} | null> = ref(null);
+const currentCategory: Ref<ICategory | null> = ref(null);
 
 // Open modal for adding a new category
 const openAddModal = () => {
@@ -177,42 +137,76 @@ const confirmDelete = (category: any) => {
 };
 
 // Handle form submission (add or edit)
-const handleFormSubmit = (formData: any) => {
+const handleFormSubmit = async (formData: any) => {
   if (isEditing.value && currentCategory.value) {
-    // Update existing category
-    const index = categories.value.findIndex(
-      (c) => c.id === currentCategory.value!.id
-    );
-    if (index !== -1) {
-      categories.value[index] = { 
-        ...categories.value[index], 
-        name: formData.name,
-        icon: formData.icon
-      };
+    try {
+      const { data, error } = await useFetch(
+        `/api/categories/${currentCategory.value._id}`,
+        {
+          method: "patch",
+          body: {
+            name: formData.name,
+            icon: formData.icon,
+          },
+        }
+      );
+
+      if (error.value) {
+        console.error("Failed to update user:", error.value);
+        return null;
+      }
+
+      console.log("Category updated successfully:", data.value);
+      await refresh();
+      isModalOpen.value = false;
+    } catch (error) {
+      console.error("Error calling update endpoint:", error);
+      throw error;
     }
   } else {
     // Add new category
-    // Generate a slug-like ID from the name
-    const newId = formData.name.toLowerCase().replace(/\s+/g, '-');
-    categories.value.push({ 
-      id: newId, 
-      name: formData.name,
-      icon: formData.icon
-    });
+    loading.value = true;
+    try {
+      await $fetch("/api/categories", {
+        method: "POST",
+        body: {
+          name: formData.name,
+          icon: formData.icon,
+        },
+      });
+      // Refresh the categories list
+      await refresh();
+    } catch (error) {
+      console.error("Error creating category:", error);
+    } finally {
+      loading.value = false;
+    }
   }
 
   isModalOpen.value = false;
 };
 
 // Delete the category
-const deleteCategory = () => {
-  categories.value = categories.value.filter(
-    (c) => c.id !== currentCategory.value!.id
-  );
-  isDeleteDialogOpen.value = false;
+const deleteCategory = async (_id: string) => {
+  try {
+    const { data } = await useFetch<any>(`/api/categories/${_id}`, {
+      method: "DELETE",
+    });
+    if (data.value && data.value.success) {
+      // Handle successful deletion (e.g., update UI, show notification)
+      console.log("Category deleted successfully");
+      await refresh(); // Refresh the categories lis
+      // You might want to refresh your users list or navigate away
+    } else {
+      // Handle error from server
+      console.error("Failed to delete user:", data.value!.error);
+    }
+    isDeleteDialogOpen.value = false;
+  } catch (error) {
+    console.error("Error calling delete endpoint:", error);
+    throw error;
+  }
 };
 </script>
 
-<style>
-
-</style>
+<style></style>

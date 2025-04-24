@@ -32,9 +32,10 @@
 <script lang="ts" setup>
 import * as v from "valibot";
 import type { FormSubmitEvent } from "@nuxt/ui";
+import type { ICategory } from "~/interfaces/categories";
 
 const props = defineProps<{
-  initialData: { name: string; icon: string; id: string } | null;
+  initialData: ICategory | null;
 }>();
 
 const emit = defineEmits(["submit", "cancel"]);
