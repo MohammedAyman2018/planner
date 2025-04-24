@@ -4,7 +4,7 @@
       <div class="flex flex-col space-y-4">
         <UFormField label="Activity Name" name="name">
           <UInput
-            v-model="state.name"
+            v-model="state.label"
             placeholder="e.g.: Gym, Valorant, Reading"
             class="w-full"
           />
@@ -12,8 +12,9 @@
         <UFormField label="Category" name="category">
           <USelect
             v-model="state.category"
-            :items="categories"
-            value-key="id"
+            :items="categories!"
+            value-key="_id"
+            label-key="name"
             class="w-full"
           />
         </UFormField>
@@ -32,26 +33,22 @@
 <script lang="ts" setup>
 import * as v from "valibot";
 import type { FormSubmitEvent } from "@nuxt/ui";
+import type { IActivity } from "~/interfaces/activities";
+import type { Reactive } from "vue";
+import type { ICategory } from "~/interfaces/categories";
 
 const props = defineProps<{
-  initialData: { category: string; name: string; id: number } | null;
+  initialData: IActivity | null;
 }>();
 
 const emit = defineEmits(["submit", "cancel"]);
 
-const categories = [
-  { id: "health", label: "Health" },
-  { id: "entertainment", label: "Entertainment" },
-  { id: "family", label: "Family" },
-  { id: "work", label: "Work" },
-  { id: "education", label: "Education" },
-  { id: "sports", label: "Sports" },
-  { id: "social", label: "Social" },
-  { id: "other", label: "Other" },
-];
+const { data: categories, refresh } = await useFetch<ICategory[]>(
+  "/api/categories"
+);
 
 const schema = v.object({
-  name: v.pipe(
+  label: v.pipe(
     v.string(),
     v.minLength(2, "Name must be at least 2 characters")
   ),
@@ -60,16 +57,16 @@ const schema = v.object({
 
 type Schema = v.InferOutput<typeof schema>;
 
-const state = reactive({
-  name: "",
+const state: Reactive<{ label: string; category: string }> = reactive({
+  label: "",
   category: "",
 });
 
 // Initialize form with data if editing
 onMounted(() => {
   if (props.initialData) {
-    state.name = props.initialData.name;
-    state.category = props.initialData.category;
+    state.label = props.initialData.label;
+    state.category = props.initialData.category_id._id!;
   }
 });
 
@@ -78,10 +75,8 @@ watch(
   () => props.initialData,
   (newVal) => {
     if (newVal) {
-      console.log(newVal);
-
-      state.name = newVal.name;
-      state.category = newVal.category;
+      state.label = newVal.label;
+      state.category = newVal.category_id._id!;
     } else {
       resetForm();
     }
@@ -89,7 +84,7 @@ watch(
 );
 
 const resetForm = () => {
-  state.name = "";
+  state.label = "";
   state.category = "";
 };
 

@@ -47,7 +47,7 @@ const icons = [
   { id: "i-lucide-users", label: "Family" },
   { id: "i-lucide-gamepad-2", label: "Entertainment" },
   { id: "i-lucide-dumbbell", label: "Sports" },
-  { id: "i-lucide-users", label: "Social" },
+  { id: "i-lucide-users-2", label: "Social" },
   { id: "i-lucide-more-horizontal", label: "Other" },
 ];
 

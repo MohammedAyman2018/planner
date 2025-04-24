@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 
 const activitySchema = new mongoose.Schema({
-    name: {
+    label: {
         type: String,
         required: [true, 'Activity name is required']
     },

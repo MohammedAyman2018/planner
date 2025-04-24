@@ -7,10 +7,12 @@
 
     <!-- Activities Table -->
 
-    <UTable :columns="columns" :data="activities" :loading="loading">
+    <UTable :columns="columns" :data="activities!" :loading="loading">
       <template #category-cell="{ row }">
         <div class="flex items-center gap-2">
-          {{ row.original.category.label }}
+          <UIcon :name="row.original.category_id.icon" class="text-lg" />
+
+          {{ row.original.category_id.name }}
         </div>
       </template>
       <template #actions-cell="{ row }">
@@ -60,7 +62,7 @@
         <div class="p-4">
           <p class="mb-4">
             Are you sure you want to delete the activity "{{
-              currentActivity?.name
+              currentActivity?.label
             }}"?
           </p>
         </div>
@@ -74,7 +76,9 @@
           >
             Cancel
           </UButton>
-          <UButton color="error" @click="deleteActivity">Delete</UButton>
+          <UButton color="error" @click="deleteActivity(currentActivity!._id!)"
+            >Delete</UButton
+          >
         </div>
       </template>
     </UModal>
@@ -82,11 +86,13 @@
 </template>
 
 <script lang="ts" setup>
+import type { IActivity } from "~/interfaces/activities";
+
 // Table columns definition
 const columns = ref([
   {
-    accessorKey: "name",
-    header: "Name",
+    accessorKey: "label",
+    header: "Label",
     label: "Activity Name",
   },
   {
@@ -102,34 +108,15 @@ const columns = ref([
 ]);
 
 // Sample activities data
-const activities = ref([
-  {
-    id: 1,
-    name: "Morning Workout",
-    category: { id: "health", label: "Health" },
-  },
-  {
-    id: 2,
-    name: "Team Meeting",
-    category: { id: "entertainment", label: "Entertainment" },
-  },
-  {
-    id: 3,
-    name: "Valorant Gaming",
-    category: { id: "family", label: "Family" },
-  },
-  { id: 4, name: "Reading", category: { id: "work", label: "Work" } },
-]);
+const { data: activities, refresh } = await useFetch<IActivity[]>(
+  "/api/activities"
+);
 
 const loading = ref(false);
 const isModalOpen = ref(false);
 const isDeleteDialogOpen = ref(false);
 const isEditing = ref(false);
-const currentActivity: Ref<{
-  category: string;
-  name: string;
-  id: number;
-} | null> = ref(null);
+const currentActivity: Ref<IActivity | null> = ref(null);
 
 // Open modal for adding a new activity
 const openAddModal = () => {
@@ -142,7 +129,7 @@ const openAddModal = () => {
 const editActivity = (activity: any) => {
   currentActivity.value = {
     ...activity.original,
-    category: activity.original.category.id,
+    category: activity.original.category_id._id,
   };
   isEditing.value = true;
   isModalOpen.value = true;
@@ -155,35 +142,76 @@ const confirmDelete = (activity: any) => {
 };
 
 // Handle form submission (add or edit)
-const handleFormSubmit = (formData: FormData) => {
+const handleFormSubmit = async (formData: any) => {
+  console.log(formData);
+
   if (isEditing.value) {
-    // Update existing activity
-    const index = activities.value.findIndex(
-      //@ts-ignore
-      (a) => a.id === currentActivity.value.id
-    );
-    if (index !== -1) {
-      activities.value[index] = { ...activities.value[index], ...formData };
+    try {
+      const { data, error } = await useFetch(
+        `/api/activities/${currentActivity.value?._id}`,
+        {
+          method: "patch",
+          body: {
+            label: formData.label,
+            category_id: formData.category,
+          },
+        }
+      );
+
+      if (error.value) {
+        console.error("Failed to update user:", error.value);
+        return null;
+      }
+
+      console.log("Category updated successfully:", data.value);
+      await refresh();
+      isModalOpen.value = false;
+    } catch (error) {
+      console.error("Error calling update endpoint:", error);
+      throw error;
     }
   } else {
-    // Add new activity
-    const newId =
-      activities.value.length > 0
-        ? Math.max(...activities.value.map((a) => a.id)) + 1
-        : 1;
-    //@ts-ignore
-    activities.value.push({ id: newId, ...formData });
+    loading.value = true;
+    try {
+      await $fetch("/api/activities", {
+        method: "POST",
+        body: {
+          label: formData.label,
+          category_id: formData.category,
+        },
+      });
+      // Refresh the activities list
+      await refresh();
+    } catch (error) {
+      console.error("Error creating category:", error);
+    } finally {
+      loading.value = false;
+    }
   }
 
   isModalOpen.value = false;
 };
 
 // Delete the activity
-const deleteActivity = () => {
-  activities.value = activities.value.filter(
-    (a) => a.id !== currentActivity.value!.id
-  );
-  isDeleteDialogOpen.value = false;
+const deleteActivity = async (_id: string) => {
+  try {
+    const { data } = await useFetch<any>(`/api/activities/${_id}`, {
+      method: "DELETE",
+    });
+    if (data.value && data.value.success) {
+      // Handle successful deletion (e.g., update UI, show notification)
+      console.log("Category deleted successfully");
+      await refresh(); // Refresh the activities lis
+      // You might want to refresh your users list or navigate away
+    } else {
+      // Handle error from server
+      console.error("Failed to delete user:", data.value!.error);
+    }
+    isDeleteDialogOpen.value = false;
+  } catch (error) {
+    console.error("Error calling delete endpoint:", error);
+    throw error;
+  }
 };
 </script>
 
