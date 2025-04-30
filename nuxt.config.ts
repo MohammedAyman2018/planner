@@ -7,5 +7,6 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // Private keys that are exposed to the server
     mongodbUri: process.env.MONGODB_URI,
+    jwtSecret: process.env.JWT_SECRET,
   }
 })
