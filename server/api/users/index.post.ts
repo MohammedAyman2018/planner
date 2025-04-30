@@ -21,8 +21,9 @@ export default defineEventHandler(async (event) => {
       wakeup_time: body.wakeup_time,
     })
 
-    await newUser.save()
+    console.log(newUser);
 
+    await newUser.save()
 
     return newUser
   } catch (error: any) {

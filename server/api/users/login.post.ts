@@ -49,13 +49,13 @@ export default defineEventHandler(async (event) => {
     );
 
     // Set cookie with token
-    setCookie(event, 'auth_token', token, {
-      httpOnly: true,
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
-    });
+    // setCookie(event, 'auth_token', token, {
+    //   httpOnly: true,
+    //   path: '/',
+    //   maxAge: 60 * 60 * 24 * 7, // 1 week
+    //   secure: process.env.NODE_ENV === 'production',
+    //   sameSite: 'strict'
+    // });
 
     return {
       success: true,
@@ -63,6 +63,7 @@ export default defineEventHandler(async (event) => {
         id: user.id,
         email: user.email,
         name: user.name,
+        token: token // Include token in respons
         // Return other non-sensitive user data here
       }
     };

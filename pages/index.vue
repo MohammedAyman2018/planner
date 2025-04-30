@@ -5,6 +5,11 @@
 </template>
 
 <script lang="ts" setup>
+definePageMeta({
+  title: "Time Line",
+  middleware: "auth",
+});
+
 import TimeLine from "@/components/timeline.vue";
 </script>
 

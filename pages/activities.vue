@@ -88,6 +88,11 @@
 <script lang="ts" setup>
 import type { IActivity } from "~/interfaces/activities";
 
+definePageMeta({
+  title: "Activities",
+  middleware: "auth",
+});
+
 // Table columns definition
 const columns = ref([
   {

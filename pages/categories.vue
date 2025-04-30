@@ -85,6 +85,11 @@
 <script lang="ts" setup>
 import type { ICategory } from "~/interfaces/categories";
 
+definePageMeta({
+  title: "Categories",
+  middleware: "auth",
+});
+
 const { data: categories, refresh } = await useFetch<ICategory[]>(
   "/api/categories"
 );
