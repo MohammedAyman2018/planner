@@ -139,7 +139,7 @@ const toast = useToast();
 
 // Fetch user data on page load
 onMounted(async () => {
-  const userCookie: Ref<IUser> = useCookie("user_data");
+  const userCookie = useCookie<IUser>("user_data");
 
   try {
     loading.value = true;
