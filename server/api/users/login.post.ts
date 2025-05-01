@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
     return {
       success: true,
       user: {
-        id: user.id,
+        _id: user.id,
         email: user.email,
         name: user.name,
         token: token // Include token in respons

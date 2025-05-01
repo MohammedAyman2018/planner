@@ -8,6 +8,7 @@ export default defineEventHandler(async (event) => {
     const body = await readBody(event)
 
     const newActivity = new Activity({
+      user_id: event.context.user.userId,
       label: body.label,
       category_id: body.category_id
     })

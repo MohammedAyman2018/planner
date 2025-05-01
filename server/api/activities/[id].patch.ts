@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
     // { new: true } returns the updated document instead of the original
     const updatedUser = await Activity.findByIdAndUpdate(
       id,
-      body,
+      { ...body, user_id: event.context.user.userId, },
       { new: true, runValidators: true }
     )
 

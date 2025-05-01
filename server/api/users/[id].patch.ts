@@ -1,6 +1,7 @@
 // server/api/users/[id].put.js or server/api/users/[id].put.ts
 import { connectToDatabase } from '~/server/db'
 import { User } from "~/server/db/models/User"
+import bcrypt from 'bcrypt';
 
 export default defineEventHandler(async (event) => {
   const id = event.context.params?.id
@@ -12,6 +13,17 @@ export default defineEventHandler(async (event) => {
     await connectToDatabase()
 
     // Find the document and update it
+    if (body.currentPassword) {
+      // Validate current password
+      const user = await User.findById(id)
+      if (!user || !(await bcrypt.compare(body.currentPassword, user.password))) {
+        setResponseStatus(event, 401)
+        return { error: 'Invalid current password' }
+      }
+      // Update password
+      body.password
+    }
+
     // { new: true } returns the updated document instead of the original
     const updatedUser = await User.findByIdAndUpdate(
       id,
