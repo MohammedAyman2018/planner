@@ -22,8 +22,9 @@
             <div>
               <h2 class="text-lg font-medium mb-4">Personal Information</h2>
 
-              <UFormField label="Full Name" name="name">
+              <UFormField label="Full Name" name="name" class="mb-3">
                 <UInput
+                  class="w-full"
                   v-model="formState.name"
                   placeholder="Your full name"
                   :disabled="!isEditing"
@@ -32,6 +33,7 @@
 
               <UFormField label="Email Address" name="email">
                 <UInput
+                  class="w-full"
                   v-model="formState.email"
                   type="email"
                   placeholder="your@email.com"
@@ -47,6 +49,7 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <UFormField label="Sleep Time" name="sleep_time ">
                   <UInput
+                    class="w-full"
                     v-model="formState.sleep_time"
                     type="time"
                     :disabled="!isEditing"
@@ -55,6 +58,7 @@
 
                 <UFormField label="Wake-up Time" name="wakeup_time">
                   <UInput
+                    class="w-full"
                     v-model="formState.wakeup_time"
                     type="time"
                     :disabled="!isEditing"
@@ -69,6 +73,7 @@
 
               <UFormField label="Current Password" name="currentPassword">
                 <UInput
+                  class="w-full"
                   v-model="formState.currentPassword"
                   type="password"
                   placeholder="Enter your current password"
@@ -77,6 +82,7 @@
 
               <UFormField label="New Password" name="newPassword">
                 <UInput
+                  class="w-full"
                   v-model="formState.newPassword"
                   type="password"
                   placeholder="Enter new password"
@@ -85,6 +91,7 @@
 
               <UFormField label="Confirm New Password" name="confirmPassword">
                 <UInput
+                  class="w-full"
                   v-model="formState.confirmPassword"
                   type="password"
                   placeholder="Confirm new password"
@@ -132,9 +139,23 @@ const toast = useToast();
 
 // Fetch user data on page load
 onMounted(async () => {
+  const userCookie: Ref<IUser> = useCookie("user_data");
+
   try {
     loading.value = true;
-    const userData = await fetchUserProfile();
+    if (!userCookie.value) {
+      showToast("Failed to load profile data", "error");
+      return;
+    }
+
+    const userData: IUser | null = await $fetch(
+      `/api/users/${userCookie.value._id}`
+    );
+
+    if (!userData) {
+      showToast("Failed to load profile data", "error");
+      return;
+    }
     user.value = userData;
 
     // Initialize form with user data
@@ -148,23 +169,6 @@ onMounted(async () => {
     loading.value = false;
   }
 });
-
-// Mock function to fetch user profile
-// Replace with actual API call in production
-async function fetchUserProfile() {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  // Return mock data
-  return {
-    _id: "user123",
-    name: "John Doe",
-    email: "john@example.com",
-    sleep_time: "22:30",
-    wakeup_time: "06:30",
-    role: "user" as const,
-  };
-}
 
 // Start editing mode
 function startEdit() {
@@ -264,16 +268,23 @@ async function updateUserProfile(
   userData: Partial<IUser>,
   currentPassword?: string
 ) {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  const userCookie: Ref<IUser> = useCookie("user_data");
 
-  // Simulate validation
-  if (currentPassword && currentPassword !== "password123") {
-    throw new Error("Current password is incorrect");
+  try {
+    const response: any = await $fetch(`/api/users/${userCookie.value._id}`, {
+      method: "PATCH",
+      body: {
+        ...userData,
+        currentPassword,
+      },
+    });
+
+    if (!response._id) {
+      throw new Error(response.message || "Failed to update profile");
+    }
+  } catch (error: any) {
+    showToast(error.message || "Failed to update profile", "error");
   }
-
-  // Return success
-  return { success: true };
 }
 
 // Helper to show toast notifications
@@ -293,5 +304,10 @@ function showToast(text: string, type: "info" | "success" | "error" = "info") {
 // Page meta
 useHead({
   title: "Your Profile - Planner",
+});
+
+definePageMeta({
+  title: "Your Profile - Planner",
+  middleware: "auth",
 });
 </script>

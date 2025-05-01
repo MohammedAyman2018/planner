@@ -90,9 +90,9 @@ const handleLogin = async () => {
 
     // Handle successful login
     if (response.status.value === "success") {
-      console.log(response.data.value.user);
-
       useCookie("auth_token").value = response.data.value.user.token;
+      delete response.data.value.user.token;
+      useCookie("user_data").value = response.data.value.user;
       toast.add({
         title: "Login successful!",
         color: "success",
