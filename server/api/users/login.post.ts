@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
     const token = jwt.sign(
       {
         userId: user.id,
-        email: user.email
+        email: user.email,
       },
       String(process.env.JWT_SECRET), // Use environment variable in production
       {
@@ -48,14 +48,6 @@ export default defineEventHandler(async (event) => {
       }
     );
 
-    // Set cookie with token
-    // setCookie(event, 'auth_token', token, {
-    //   httpOnly: true,
-    //   path: '/',
-    //   maxAge: 60 * 60 * 24 * 7, // 1 week
-    //   secure: process.env.NODE_ENV === 'production',
-    //   sameSite: 'strict'
-    // });
 
     return {
       success: true,
@@ -63,8 +55,9 @@ export default defineEventHandler(async (event) => {
         _id: user.id,
         email: user.email,
         name: user.name,
-        token: token // Include token in respons
-        // Return other non-sensitive user data here
+        sleep_time: user.sleep_time,
+        wakeup_time: user.wakeup_time,
+        token: token
       }
     };
   } catch (error) {

@@ -1,6 +1,7 @@
 <template>
   <UApp>
     <UContainer>
+      <TaskDialog />
       <Sidebar />
 
       <NuxtPage />
@@ -8,6 +9,8 @@
   </UApp>
 </template>
 
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import TaskDialog from "~/components/task-dialog.vue";
+</script>
 
 <style></style>
