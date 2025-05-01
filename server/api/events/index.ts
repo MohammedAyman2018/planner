@@ -1,9 +1,9 @@
 import { connectToDatabase } from "~/server/db"
-import { Category } from "~/server/db/models/categories"
+import { Event } from "~/server/db/models/Event"
 
 export default defineEventHandler(async (event) => {
   await connectToDatabase()
-  return await Category.find({
+  return await Event.find({
     user_id: event.context.user.userId,
   })
 })

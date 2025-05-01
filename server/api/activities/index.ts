@@ -4,7 +4,9 @@ import { Activity } from "~/server/db/models/Activity"
 export default defineEventHandler(async (event) => {
   try {
     await connectToDatabase()
-    const activities = await Activity.find().populate('category_id')
+    const activities = await Activity.find({
+      user_id: event.context.user.userId,
+    }).populate('category_id')
     return activities
   } catch (error) {
     console.error('Error fetching activities:', error)
